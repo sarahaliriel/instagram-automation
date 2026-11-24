@@ -1,0 +1,82 @@
+.main {
+  width: min(100% - 2.5rem, 76rem);
+  margin-inline: auto;
+  padding-block: clamp(3.5rem, 8vw, 7rem) 6rem;
+  min-height: 75vh;
+}
+.eyebrow {
+  margin: 0 0 1.5rem;
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+}
+.main h1 {
+  max-width: 48rem;
+  margin: 0;
+  font:
+    400 clamp(2.75rem, 7vw, 5.5rem) / 1.05 Georgia,
+    "Times New Roman",
+    serif;
+  letter-spacing: -0.055em;
+}
+.lead {
+  max-width: 42rem;
+  margin: 2rem 0 0;
+  color: var(--muted);
+  font-size: clamp(1.05rem, 2vw, 1.22rem);
+  line-height: 1.7;
+}
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  margin-top: clamp(3.5rem, 7vw, 6rem);
+  border: 1px solid var(--border);
+  background: var(--border);
+}
+.cards a {
+  min-height: 16rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  background: var(--background);
+  color: var(--foreground);
+  text-decoration: none;
+}
+.cards a span:first-child {
+  color: var(--accent);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.cards a strong {
+  font:
+    400 clamp(1.5rem, 2vw, 2rem) / 1.2 Georgia,
+    "Times New Roman",
+    serif;
+}
+.cards a span:last-child {
+  margin-top: auto;
+  color: var(--muted);
+  font-size: 0.91rem;
+  line-height: 1.5;
+}
+.draft {
+  max-width: 42rem;
+  margin-top: 2.5rem;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.65;
+}
+@media (max-width: 800px) {
+  .cards {
+    grid-template-columns: 1fr;
+  }
+  .cards a {
+    min-height: 11rem;
+  }
+}

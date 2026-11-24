@@ -1,0 +1,8 @@
+/.next/
+/out/
+/static-out/
+/src/app/layout.tsx
+/src/app/globals.css
+/src/app/(legal)/
+/next-env.d.ts
+/*.tsbuildinfo
