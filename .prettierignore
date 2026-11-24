@@ -1,0 +1,15 @@
+node_modules
+.next
+out
+coverage
+package-lock.json
+next-env.d.ts
+
+src/generated/prisma
+legal-site/.next
+legal-site/node_modules
+legal-site/static-out
+legal-site/src/app/(legal)
+legal-site/src/app/layout.tsx
+legal-site/src/app/globals.css
+legal-site/tsconfig.tsbuildinfo

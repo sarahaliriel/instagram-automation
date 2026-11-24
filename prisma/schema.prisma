@@ -1,0 +1,286 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Provider {
+  INSTAGRAM
+}
+
+enum EventState {
+  RECEIVED
+  PENDING
+  PROCESSING
+  PROCESSED
+  FAILED_RETRYABLE
+  FAILED_PERMANENT
+  UNKNOWN
+  SKIPPED
+  READY_FOR_DELIVERY
+}
+
+enum CommentSource {
+  WEBHOOK
+  MANUAL_GET
+}
+
+enum OutboxState {
+  PENDING
+  LEASED
+  DISPATCHED
+  COMPLETED
+}
+
+enum DeliveryState {
+  PENDING_DELIVERY
+  SENDING
+  ACCEPTED_BY_META
+  FAILED_RETRYABLE
+  FAILED_PERMANENT
+  UNKNOWN_OUTCOME
+  FALLBACK_ELIGIBLE
+  FALLBACK_ACCEPTED_BY_META
+  MANUAL_REVIEW
+}
+
+enum DeliveryKind {
+  PRIVATE_REPLY
+  PUBLIC_FALLBACK
+}
+
+enum DeliveryMode {
+  MOCK
+  CONTROLLED_TEST
+}
+
+enum MatchingStrategy {
+  EXACT
+  WHOLE_WORD
+}
+
+enum MediaScope {
+  GLOBAL
+  MEDIA
+}
+
+model InstagramAccount {
+  id         String             @id @default(uuid()) @db.Uuid
+  provider   Provider           @default(INSTAGRAM)
+  providerId String             @db.VarChar(64)
+  createdAt  DateTime           @default(now()) @db.Timestamptz(3)
+  media      InstagramMedia[]
+  comments   InstagramComment[]
+  events     WebhookEvent[]
+  rules      AutomationRule[]
+
+  @@unique([provider, providerId])
+}
+
+model InstagramMedia {
+  id         String             @id @default(uuid()) @db.Uuid
+  accountId  String             @db.Uuid
+  providerId String             @db.VarChar(64)
+  account    InstagramAccount   @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  comments   InstagramComment[]
+  rules      AutomationRule[]
+  createdAt  DateTime           @default(now()) @db.Timestamptz(3)
+
+  @@unique([accountId, providerId])
+  @@unique([id, accountId])
+}
+
+model InstagramComment {
+  id                String           @id @default(uuid()) @db.Uuid
+  accountId         String           @db.Uuid
+  mediaId           String           @db.Uuid
+  providerId        String           @db.VarChar(64)
+  textCiphertext    String?          @db.Text
+  providerCreatedAt DateTime?        @db.Timestamptz(3)
+  account           InstagramAccount @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  media             InstagramMedia   @relation(fields: [mediaId, accountId], references: [id, accountId], onDelete: Restrict)
+  events            WebhookEvent[]
+  createdAt         DateTime         @default(now()) @db.Timestamptz(3)
+
+  @@unique([accountId, providerId])
+  @@unique([id, accountId, providerId])
+  @@index([mediaId, accountId])
+}
+
+model WebhookEvent {
+  id                String               @id @default(uuid()) @db.Uuid
+  provider          Provider             @default(INSTAGRAM)
+  accountId         String               @db.Uuid
+  providerCommentId String               @db.VarChar(64)
+  commentId         String               @db.Uuid
+  source            CommentSource        @default(WEBHOOK)
+  notificationTime  BigInt?
+  state             EventState           @default(RECEIVED)
+  attempts          Int                  @default(0)
+  leaseToken        String?              @db.Uuid
+  leaseExpiresAt    DateTime?            @db.Timestamptz(3)
+  nextAttemptAt     DateTime             @default(now()) @db.Timestamptz(3)
+  lastErrorCode     String?              @db.VarChar(64)
+  createdAt         DateTime             @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime             @updatedAt @db.Timestamptz(3)
+  account           InstagramAccount     @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  comment           InstagramComment     @relation(fields: [commentId, accountId, providerCommentId], references: [id, accountId, providerId], onDelete: Restrict)
+  outbox            OutboxMessage?
+  execution         AutomationExecution?
+  transitions       EventTransition[]
+
+  @@unique([provider, accountId, providerCommentId])
+  @@unique([id, accountId, commentId])
+  @@index([state, nextAttemptAt])
+  @@index([state, leaseExpiresAt])
+}
+
+model OutboxMessage {
+  id             String       @id @default(uuid()) @db.Uuid
+  eventId        String       @unique @db.Uuid
+  state          OutboxState  @default(PENDING)
+  attempts       Int          @default(0)
+  leaseToken     String?      @db.Uuid
+  leaseExpiresAt DateTime?    @db.Timestamptz(3)
+  nextAttemptAt  DateTime     @default(now()) @db.Timestamptz(3)
+  lastErrorCode  String?      @db.VarChar(64)
+  createdAt      DateTime     @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime     @updatedAt @db.Timestamptz(3)
+  event          WebhookEvent @relation(fields: [eventId], references: [id], onDelete: Restrict)
+
+  @@index([state, nextAttemptAt])
+  @@index([state, leaseExpiresAt])
+}
+
+model AutomationRule {
+  id                               String                @id @default(uuid()) @db.Uuid
+  accountId                        String                @db.Uuid
+  name                             String                @db.VarChar(120)
+  enabled                          Boolean               @default(false)
+  strategy                         MatchingStrategy
+  scope                            MediaScope
+  mediaId                          String?               @db.Uuid
+  priority                         Int                   @default(0)
+  privateMessageTemplateCiphertext String                @db.Text
+  publicFallbackEnabled            Boolean               @default(false)
+  publicFallbackTemplateCiphertext String?               @db.Text
+  archivedAt                       DateTime?             @db.Timestamptz(3)
+  revision                         Int                   @default(1)
+  activatedAt                      DateTime?             @db.Timestamptz(3)
+  createdAt                        DateTime              @default(now()) @db.Timestamptz(3)
+  updatedAt                        DateTime              @updatedAt @db.Timestamptz(3)
+  account                          InstagramAccount      @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  media                            InstagramMedia?       @relation(fields: [mediaId, accountId], references: [id, accountId], onDelete: Restrict)
+  keywords                         AutomationKeyword[]
+  executions                       AutomationExecution[]
+
+  @@unique([id, accountId])
+  @@index([accountId, enabled, scope, mediaId])
+  @@index([accountId, archivedAt, updatedAt])
+}
+
+model AutomationKeyword {
+  id                String                @id @default(uuid()) @db.Uuid
+  ruleId            String                @db.Uuid
+  originalKeyword   String                @db.VarChar(200)
+  normalizedKeyword String                @db.VarChar(200)
+  rule              AutomationRule        @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  executions        AutomationExecution[]
+
+  @@unique([ruleId, normalizedKeyword])
+  @@unique([id, ruleId])
+}
+
+// Reuse Phase 4 records/table; there is no second execution/intent ledger.
+model AutomationExecution {
+  id                    String             @id @default(uuid()) @db.Uuid
+  eventId               String             @unique @db.Uuid
+  accountId             String             @db.Uuid
+  commentId             String             @unique @db.Uuid
+  state                 EventState
+  reasonCode            String             @db.VarChar(64)
+  engineVersion         String             @default("matching-v1") @db.VarChar(32)
+  selectedRuleId        String?            @db.Uuid
+  matchedKeywordId      String?            @db.Uuid
+  selectedRuleUpdatedAt DateTime?          @db.Timestamptz(3)
+  intentCiphertext      String?            @db.Text
+  createdAt             DateTime           @default(now()) @db.Timestamptz(3)
+  event                 WebhookEvent       @relation(fields: [eventId, accountId, commentId], references: [id, accountId, commentId], onDelete: Restrict)
+  selectedRule          AutomationRule?    @relation(fields: [selectedRuleId, accountId], references: [id, accountId], onDelete: Restrict)
+  matchedKeyword        AutomationKeyword? @relation(fields: [matchedKeywordId, selectedRuleId], references: [id, ruleId], onDelete: Restrict)
+
+  deliveries DeliveryAction[]
+
+  @@unique([eventId, accountId, commentId])
+  @@index([state, createdAt])
+  @@index([selectedRuleId, accountId])
+  @@index([matchedKeywordId, selectedRuleId])
+  @@map("ProcessingExecution")
+}
+
+model EventTransition {
+  id        String       @id @default(uuid()) @db.Uuid
+  eventId   String       @db.Uuid
+  state     EventState
+  code      String?      @db.VarChar(64)
+  createdAt DateTime     @default(now()) @db.Timestamptz(3)
+  event     WebhookEvent @relation(fields: [eventId], references: [id], onDelete: Restrict)
+
+  @@index([eventId, createdAt])
+}
+
+// One durable action per canonical execution/comment and operation, not per webhook delivery.
+model DeliveryAction {
+  id                    String              @id @default(uuid()) @db.Uuid
+  executionId           String              @db.Uuid
+  kind                  DeliveryKind
+  state                 DeliveryState       @default(PENDING_DELIVERY)
+  mode                  DeliveryMode
+  attempts              Int                 @default(0)
+  activeAttemptId       String?             @db.Uuid
+  leaseExpiresAt        DateTime?           @db.Timestamptz(3)
+  nextAttemptAt         DateTime            @default(now()) @db.Timestamptz(3)
+  lastErrorCode         String?             @db.VarChar(64)
+  operationIdCiphertext String?             @db.Text
+  rejectionEvidenceId   String?             @db.Uuid
+  approvalId            String?             @db.Uuid
+  approvedUntil         DateTime?           @db.Timestamptz(3)
+  createdAt             DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt             DateTime            @updatedAt @db.Timestamptz(3)
+  execution             AutomationExecution @relation(fields: [executionId], references: [id], onDelete: Restrict)
+  messageAttempts       MessageAttempt[]
+  rejectionEvidence     MessageAttempt?     @relation("FallbackEvidence", fields: [rejectionEvidenceId], references: [id], onDelete: Restrict)
+
+  @@unique([executionId, kind])
+  @@index([state, nextAttemptAt])
+  @@index([state, leaseExpiresAt])
+}
+
+model MessageAttempt {
+  id          String         @id @default(uuid()) @db.Uuid
+  actionId    String         @db.Uuid
+  number      Int
+  state       DeliveryState
+  errorCode   String?        @db.VarChar(64)
+  httpStatus  Int?
+  metaCode    Int?
+  metaSubcode Int?
+  createdAt   DateTime       @default(now()) @db.Timestamptz(3)
+  completedAt DateTime?      @db.Timestamptz(3)
+  action      DeliveryAction @relation(fields: [actionId], references: [id], onDelete: Restrict)
+
+  evidenceFor DeliveryAction[] @relation("FallbackEvidence")
+
+  @@unique([actionId, number])
+  @@index([actionId, createdAt])
+}
+
+// Minimal receipt for an approved, test-only administrative erasure.
+model DataRightsErasure {
+  caseId    String   @id @db.Uuid
+  digest    String   @db.Char(64)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+}

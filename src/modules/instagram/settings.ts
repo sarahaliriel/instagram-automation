@@ -1,0 +1,19 @@
+import "server-only";
+import { parseInstagramSettings } from "./settings-schema";
+
+export function getInstagramSettings() {
+  return parseInstagramSettings({
+    NODE_ENV: process.env.NODE_ENV,
+    INSTAGRAM_INTEGRATION_MODE: process.env.INSTAGRAM_INTEGRATION_MODE,
+    INSTAGRAM_ADMIN_READ_MODE: process.env.INSTAGRAM_ADMIN_READ_MODE,
+    INSTAGRAM_API_VERSION: process.env.INSTAGRAM_API_VERSION,
+    META_WEBHOOK_APP_SECRET: process.env.META_WEBHOOK_APP_SECRET,
+    INSTAGRAM_WEBHOOK_VERIFY_TOKEN: process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN,
+    INSTAGRAM_ACCOUNT_ID: process.env.INSTAGRAM_ACCOUNT_ID,
+    INSTAGRAM_ACCESS_TOKEN: process.env.INSTAGRAM_ACCESS_TOKEN,
+    INSTAGRAM_AUTH_MODEL: process.env.INSTAGRAM_AUTH_MODEL,
+    META_LOGIN_CONFIG_ID: process.env.META_LOGIN_CONFIG_ID,
+    META_CLIENT_BUSINESS_ID: process.env.META_CLIENT_BUSINESS_ID,
+    META_SYSTEM_USER_ACCESS_TOKEN: process.env.META_SYSTEM_USER_ACCESS_TOKEN,
+  });
+}

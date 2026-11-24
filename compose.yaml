@@ -1,0 +1,19 @@
+services:
+  db:
+    image: postgres:17.12
+    environment:
+      POSTGRES_USER: instagram_app
+      POSTGRES_DB: instagram_automation_dev
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD for local development}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        ["CMD-SHELL", "pg_isready -U instagram_app -d instagram_automation_dev"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+volumes:
+  postgres_data:

@@ -1,0 +1,151 @@
+.main {
+  width: min(100% - 2.5rem, 82rem);
+  margin-inline: auto;
+  padding-block: clamp(3rem, 7vw, 6.5rem) 6rem;
+}
+.eyebrow {
+  margin: 0 0 1.25rem;
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+}
+.hero {
+  max-width: 50rem;
+  padding-bottom: clamp(2.5rem, 5vw, 4.5rem);
+  border-bottom: 1px solid var(--border);
+}
+.hero h1 {
+  margin: 0;
+  font:
+    400 clamp(2.7rem, 7vw, 5.6rem) / 1.03 Georgia,
+    "Times New Roman",
+    serif;
+  letter-spacing: -0.055em;
+  overflow-wrap: anywhere;
+}
+.lead {
+  max-width: 43rem;
+  margin: 1.8rem 0 0;
+  color: var(--muted);
+  font-size: clamp(1.05rem, 2vw, 1.22rem);
+  line-height: 1.65;
+}
+.updated {
+  margin: 1.5rem 0 0;
+  color: var(--muted);
+  font-size: 0.83rem;
+}
+.grid {
+  display: grid;
+  grid-template-columns: minmax(11rem, 15rem) minmax(0, 43rem);
+  gap: clamp(2rem, 6vw, 7rem);
+  padding-top: clamp(2.5rem, 5vw, 4.5rem);
+}
+.toc {
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  font-size: 0.84rem;
+}
+.tocTitle {
+  margin: 0 0 1rem;
+  color: var(--muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.7rem;
+}
+.toc ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+.toc a {
+  color: var(--muted);
+  text-decoration: none;
+  line-height: 1.4;
+}
+.toc a:hover,
+.toc a:focus-visible {
+  color: var(--foreground);
+  text-decoration: underline;
+}
+.article {
+  min-width: 0;
+}
+.article section + section {
+  margin-top: 3.2rem;
+}
+.article h2 {
+  margin: 0 0 1.1rem;
+  font:
+    400 clamp(1.55rem, 3vw, 2rem) / 1.2 Georgia,
+    "Times New Roman",
+    serif;
+  letter-spacing: -0.025em;
+}
+.article h3 {
+  margin: 1.6rem 0 0.7rem;
+  font-size: 1rem;
+}
+.article p,
+.article li {
+  line-height: 1.8;
+}
+.article p {
+  margin: 0 0 1rem;
+}
+.article ul,
+.article ol {
+  padding-left: 1.4rem;
+  margin: 0 0 1.2rem;
+}
+.article li + li {
+  margin-top: 0.5rem;
+}
+.note {
+  padding: 1.2rem 1.4rem;
+  border-left: 3px solid var(--accent);
+  background: #f1ede4;
+}
+.note p:last-child {
+  margin-bottom: 0;
+}
+.related {
+  margin-top: 4.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border);
+}
+.related h2 {
+  font:
+    400 1.4rem Georgia,
+    "Times New Roman",
+    serif;
+}
+.related nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem 1.5rem;
+}
+@media (max-width: 720px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  .toc {
+    position: static;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1.5rem;
+  }
+  .toc ul {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 380px) {
+  .toc ul {
+    grid-template-columns: 1fr;
+  }
+}
