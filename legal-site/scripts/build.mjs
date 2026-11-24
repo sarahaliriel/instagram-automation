@@ -26,10 +26,17 @@ const allowedSources = [
   "src/app/(legal)/data-deletion/page.tsx",
 ];
 
+const secretName =
+  /(TOKEN|SECRET|PASSWORD|API_KEY|DATABASE|POSTGRES|INSTAGRAM|META_|INNGEST|EVENT_ENCRYPTION|CREDENTIAL|PRIVATE_KEY)/i;
+
+export function hasSensitiveEnvironment(env) {
+  return Object.keys(env).some(
+    (name) => name !== "VERCEL_OIDC_TOKEN" && secretName.test(name),
+  );
+}
+
 async function main() {
-  const secretName =
-    /(TOKEN|SECRET|PASSWORD|API_KEY|DATABASE|POSTGRES|INSTAGRAM|META_|INNGEST|EVENT_ENCRYPTION|CREDENTIAL|PRIVATE_KEY)/i;
-  if (Object.keys(process.env).some((name) => secretName.test(name)))
+  if (hasSensitiveEnvironment(process.env))
     throw new Error(
       "Remove sensitive environment variables before building the legal site",
     );
@@ -100,7 +107,11 @@ async function main() {
     process.stdout.write(`${file.path}\t${file.bytes}\n`);
 }
 
-main().catch((error) => {
-  process.stderr.write(`${error.message}\n`);
-  process.exitCode = 1;
-});
+if (
+  process.argv[1] &&
+  resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+)
+  main().catch((error) => {
+    process.stderr.write(`${error.message}\n`);
+    process.exitCode = 1;
+  });
