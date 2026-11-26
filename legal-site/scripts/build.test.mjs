@@ -4,11 +4,19 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { hasSensitiveEnvironment } from "./build.mjs";
 
-test("allows only the exact Vercel OIDC platform variable", () => {
-  assert.equal(hasSensitiveEnvironment({ VERCEL_OIDC_TOKEN: "dummy" }), false);
+test("allows only the exact Vercel platform variable names", () => {
+  assert.equal(
+    hasSensitiveEnvironment({
+      VERCEL_OIDC_TOKEN: "dummy",
+      VERCEL_ARTIFACTS_TOKEN: "dummy",
+    }),
+    false,
+  );
   for (const name of [
     "vercel_oidc_token",
     "VERCEL_OIDC_TOKEN_EXTRA",
+    "VERCEL_ARTIFACTS_TOKEN_EXTRA",
+    "vercel_artifacts_token",
     "VERCEL_AUTOMATION_BYPASS_SECRET",
   ])
     assert.equal(hasSensitiveEnvironment({ [name]: "dummy" }), true);
@@ -43,6 +51,7 @@ test("failure diagnostic reports only rejected names, never values", () => {
         META_ACCESS_TOKEN: "value-must-not-appear",
         DATABASE_URL: "another-private-value",
         VERCEL_OIDC_TOKEN: "oidc-private-value",
+        VERCEL_ARTIFACTS_TOKEN: "artifacts-private-value",
       },
       encoding: "utf8",
     },
@@ -56,6 +65,8 @@ test("failure diagnostic reports only rejected names, never values", () => {
     "value-must-not-appear",
     "another-private-value",
     "oidc-private-value",
+    "artifacts-private-value",
+    "VERCEL_ARTIFACTS_TOKEN",
     "VERCEL_OIDC_TOKEN",
   ])
     assert.doesNotMatch(result.stderr + result.stdout, new RegExp(value));

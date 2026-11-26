@@ -29,9 +29,14 @@ const allowedSources = [
 const secretName =
   /(TOKEN|SECRET|PASSWORD|API_KEY|DATABASE|POSTGRES|INSTAGRAM|META_|INNGEST|EVENT_ENCRYPTION|CREDENTIAL|PRIVATE_KEY)/i;
 
+const allowedPlatformNames = new Set([
+  "VERCEL_OIDC_TOKEN",
+  "VERCEL_ARTIFACTS_TOKEN",
+]);
+
 export function rejectedEnvironmentNames(env) {
   return Object.keys(env)
-    .filter((name) => name !== "VERCEL_OIDC_TOKEN" && secretName.test(name))
+    .filter((name) => !allowedPlatformNames.has(name) && secretName.test(name))
     .sort();
 }
 
