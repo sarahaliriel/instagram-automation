@@ -29,16 +29,21 @@ const allowedSources = [
 const secretName =
   /(TOKEN|SECRET|PASSWORD|API_KEY|DATABASE|POSTGRES|INSTAGRAM|META_|INNGEST|EVENT_ENCRYPTION|CREDENTIAL|PRIVATE_KEY)/i;
 
+export function rejectedEnvironmentNames(env) {
+  return Object.keys(env)
+    .filter((name) => name !== "VERCEL_OIDC_TOKEN" && secretName.test(name))
+    .sort();
+}
+
 export function hasSensitiveEnvironment(env) {
-  return Object.keys(env).some(
-    (name) => name !== "VERCEL_OIDC_TOKEN" && secretName.test(name),
-  );
+  return rejectedEnvironmentNames(env).length > 0;
 }
 
 async function main() {
-  if (hasSensitiveEnvironment(process.env))
+  const rejected = rejectedEnvironmentNames(process.env);
+  if (rejected.length > 0)
     throw new Error(
-      "Remove sensitive environment variables before building the legal site",
+      `Remove sensitive environment variables before building the legal site; rejected names: ${JSON.stringify(rejected)}`,
     );
   await rm(join(site, "static-out"), { recursive: true, force: true });
   for (const name of await readdir(site))
